@@ -1,5 +1,6 @@
 # tf-aws-infra
 
+
 # AWS Networking Infrastructure with Terraform
 
 This repository contains the Terraform templates to set up networking resources in AWS, such as a Virtual Private Cloud (VPC), subnets, Internet Gateway, and Route Tables. The setup ensures proper networking for web applications, making it easy to manage infrastructure as code.
