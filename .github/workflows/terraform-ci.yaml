@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  terraform-plan:
     name: 'Terraform Validate & Format'
     runs-on: ubuntu-latest
 
