@@ -2,11 +2,10 @@ name: Terraform CI
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-  terraform:
+  build:
     name: 'Terraform Validate & Format'
     runs-on: ubuntu-latest
 
