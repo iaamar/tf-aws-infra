@@ -1,13 +1,15 @@
-name: Iac Workflow
+name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
-    name: Terraform Check 
     runs-on: ubuntu-latest
+
+    name: Terraform Check 
 
     steps:
       - name: Print
