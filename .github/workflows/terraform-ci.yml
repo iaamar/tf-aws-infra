@@ -1,8 +1,6 @@
 name: 'Terraform'
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -27,7 +25,10 @@ jobs:
       uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: 1.9.7
-        
+
+    - name: 'Terraform Init'
+      run: terraform init 
+          
     # Terraform validate
     - name: Terraform Validate
       run: terraform validate
