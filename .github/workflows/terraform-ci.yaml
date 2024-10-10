@@ -1,11 +1,9 @@
 name: Terraform CI
 
 on:
-  push:
-    branches: [ "a03" ]
   pull_request:
     branches:
-      - a03
+      - main
 
 jobs:
   terraform:
