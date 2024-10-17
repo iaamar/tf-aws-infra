@@ -1,10 +1,9 @@
 resource "aws_instance" "webapp_instance" {
-  ami           = "a04"
-  instance_type = "t2.micro" # You can choose any instance type as per your needs
-  #   key_name               = "<your_key_nam e>" # Optional, if you want SSH access
-  security_groups             = [aws_security_group.app_security_group.name]
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  security_groups             = var.security_group_name
   associate_public_ip_address = true
-  subnet_id                   = aws_subnet.public_subnet[*].id
+  subnet_id                   = aws_subnet.public_subnet[0].id
 
   root_block_device {
     volume_size           = 25
@@ -18,3 +17,5 @@ resource "aws_instance" "webapp_instance" {
     Name = "AppInstance"
   }
 }
+
+
