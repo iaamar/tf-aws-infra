@@ -14,7 +14,7 @@ resource "aws_instance" "webapp_instance" {
   disable_api_termination = false
 
   tags = {
-    Name = "AppInstance"
+    Name = "WebAppInstance"
   }
 }
 
