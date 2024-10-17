@@ -63,4 +63,5 @@ jobs:
           -var="env=dev" \
           -var='security_group_name=["sg-00246283c32b08144"]' \
           -var="instance_type=t2.micro" \
-          -var="ami_id=ami-055b20a0020459df7"
+          -var="ami_id=ami-055b20a0020459df7" \
+          -out=tfplan.out
