@@ -28,11 +28,15 @@ jobs:
         VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
         PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
         PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+        ENVIRONMENT: ${{ secrets.ENV }}
         AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
         SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
         AMI_ID: ${{ secrets.AMI_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        AWS_DEFAULT_OUTPUT: json
       run: |
         terraform plan \
           -var="aws_region=${AWS_REGION}" \
@@ -52,11 +56,15 @@ jobs:
         VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
         PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
         PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+        ENVIRONMENT: ${{ secrets.ENV }}
         AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
         SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
         INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
         AMI_ID: ${{ secrets.AMI_ID }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        AWS_DEFAULT_OUTPUT: json
       run: |
         terraform apply -auto-approve \
           -var="aws_region=${AWS_REGION}" \
