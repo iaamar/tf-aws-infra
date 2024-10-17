@@ -25,7 +25,7 @@ jobs:
     - name: Terraform Plan
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
-        vpc_cidr: ${{ secrets.VPC_CIDR_BLOCK }}
+        VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
         PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
         PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
         ENVIRONMENT: ${{ secrets.ENV }}
@@ -41,8 +41,6 @@ jobs:
         terraform plan \
           -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
           -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          -var="aws_default_region=${AWS_DEFAULT_REGION}" \
-          -var="aws_default_output=${AWS_DEFAULT_OUTPUT}" \
           -var="aws_region=${AWS_DEFAULT_REGION}" \
           -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
           -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
@@ -73,8 +71,6 @@ jobs:
         terraform apply -auto-approve \
           -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
           -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          -var="aws_default_region=${AWS_DEFAULT_REGION}" \
-          -var="aws_default_output=${AWS_DEFAULT_OUTPUT}" \
           -var="aws_region=${AWS_REGION}" \
           -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
           -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
