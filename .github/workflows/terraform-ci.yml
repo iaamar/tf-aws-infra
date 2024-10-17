@@ -40,7 +40,8 @@ jobs:
         -var="instance_type=t2.micro" \
         -var="ami_id=ami-055b20a0020459df7"
         -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
-        -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+        -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}
+        -out=tfplan.out"
 
 
 
