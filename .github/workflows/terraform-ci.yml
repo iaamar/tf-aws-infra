@@ -1,4 +1,4 @@
-name: Terraform Plan and Apply
+name: Terraform CI
 
 on:
   push:
@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  terraform:
+  terraform-format:
+    name: Check Terraform Format
     runs-on: ubuntu-latest
 
     steps:
