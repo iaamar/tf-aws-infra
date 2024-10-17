@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   terraform:
@@ -39,10 +42,6 @@ jobs:
           -var='security_group_name=["sg-00246283c32b08144"]' \
           -var="instance_type=t2.micro" \
           -var="ami_id=ami-055b20a0020459df7" \
-          -var="access_key=${AWS_ACCESS_KEY_ID}" \
-          -var="secret_key=${AWS_SECRET_ACCESS_KEY}" \
-          -var="aws_default_region=${AWS_DEFAULT_REGION}" \
-          -var="aws_region=${AWS_DEFAULT_REGION}" \
           -out=tfplan.out
 
     - name: Terraform Apply
@@ -51,4 +50,4 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: "us-east-1"
-      run: terraform apply "tfplan.out" 
+      run: terraform apply "tfplan.out"
