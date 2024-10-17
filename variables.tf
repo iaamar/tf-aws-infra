@@ -28,3 +28,20 @@ variable "availability_zones" {
   type        = list(string)
   default     = ["us-west-1a", "us-west-1b", "us-west-1c"]
 }
+
+variable "security_group_name" {
+  description = "The name of the security group"
+  type        = list(string)
+}
+
+variable "instance_type" {
+  description = "The type of EC2 instance"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "ami_id" {
+  description = "The AMI ID for the EC2 instance"
+  type        = string
+
+}
