@@ -7,6 +7,20 @@ on:
   pull_request:
     branches:
       - main
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
+  PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
+  PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
+  ENVIRONMENT: ${{ secrets.ENV }}
+  AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
+  SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
+  INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
+  AMI_ID: ${{ secrets.AMI_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  AWS_DEFAULT_OUTPUT: json
 
 jobs:
   terraform:
@@ -23,23 +37,13 @@ jobs:
       run: terraform init
 
     - name: Terraform Plan
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
-        PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
-        PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENV }}
-        AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
-        SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
-        INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-        AMI_ID: ${{ secrets.AMI_ID }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        AWS_DEFAULT_OUTPUT: json
       run: |
         terraform plan \
-          -var="aws_region=${AWS_REGION}" \
+          -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+          -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+          -var="aws_default_region=${AWS_DEFAULT_REGION}" \
+          -var="aws_default_output=${AWS_DEFAULT_OUTPUT}" \
+          -var="aws_region=${AWS_DEFAULT_REGION}" \
           -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
           -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
           -var="private_subnet_cidrs=${PRIVATE_SUBNET_CIDRS}" \
@@ -51,22 +55,12 @@ jobs:
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main'
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
-        PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
-        PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENV }}
-        AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
-        SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
-        INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-        AMI_ID: ${{ secrets.AMI_ID }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        AWS_DEFAULT_OUTPUT: json
       run: |
         terraform apply -auto-approve \
+          -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+          -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+          -var="aws_default_region=${AWS_DEFAULT_REGION}" \
+          -var="aws_default_output=${AWS_DEFAULT_OUTPUT}" \
           -var="aws_region=${AWS_REGION}" \
           -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
           -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
