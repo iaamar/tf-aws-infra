@@ -24,45 +24,29 @@ jobs:
 
     - name: Terraform Plan
       env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
-        PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
-        PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENV }}
-        AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
-        SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
-        INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-        AMI_ID: ${{ secrets.AMI_ID }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         AWS_DEFAULT_OUTPUT: json
       run: |
         terraform plan \
-          -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
-          -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          -var="aws_region=${AWS_DEFAULT_REGION}" \
-          -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
-          -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
-          -var="private_subnet_cidrs=${PRIVATE_SUBNET_CIDRS}" \
-          -var="env=${ENVIRONMENT}" \
-          -var="availability_zones=${AVAILABILITY_ZONES}" \
-          -var="security_group_name=${SECURITY_GROUP_NAME}" \
-          -var="instance_type=${INSTANCE_TYPE}" \
-          -var="ami_id=${AMI_ID}"
+        -var="aws_region=us-east-1" \
+        -var="vpc_cidr_block=10.0.0.0/16" \
+        -var='public_subnet_cidrs=["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]' \
+        -var='private_subnet_cidrs=["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]' \
+        -var='availability_zones=["us-east-1a", "us-east-1b", "us-east-1c"]' \
+        -var="env=dev" \
+        -var='security_group_name=["sg-00246283c32b08144"]' \
+        -var="instance_type=t2.micro" \
+        -var="ami_id=ami-055b20a0020459df7"
+        -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+        -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+
+
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main'
       env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        VPC_CIDR_BLOCK: ${{ secrets.VPC_CIDR_BLOCK }}
-        PUBLIC_SUBNET_CIDRS: ${{ secrets.PUBLIC_SUBNET_CIDRS }}
-        PRIVATE_SUBNET_CIDRS: ${{ secrets.PRIVATE_SUBNET_CIDRS }}
-        ENVIRONMENT: ${{ secrets.ENV }}
-        AVAILABILITY_ZONES: ${{ secrets.AVAILABILITY_ZONES }}
-        SECURITY_GROUP_NAME: ${{ secrets.SECURITY_GROUP_NAME }}
-        INSTANCE_TYPE: ${{ secrets.INSTANCE_TYPE }}
-        AMI_ID: ${{ secrets.AMI_ID }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
@@ -71,12 +55,12 @@ jobs:
         terraform apply -auto-approve \
           -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
           -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-          -var="aws_region=${AWS_REGION}" \
-          -var="vpc_cidr_block=${VPC_CIDR_BLOCK}" \
-          -var="public_subnet_cidrs=${PUBLIC_SUBNET_CIDRS}" \
-          -var="private_subnet_cidrs=${PRIVATE_SUBNET_CIDRS}" \
-          -var="env=${ENVIRONMENT}" \
-          -var="availability_zones=${AVAILABILITY_ZONES}" \
-          -var="security_group_name=${SECURITY_GROUP_NAME}" \
-          -var="instance_type=${INSTANCE_TYPE}" \
-          -var="ami_id=${AMI_ID}"
+          -var="aws_region=us-east-1" \
+          -var="vpc_cidr_block=10.0.0.0/16" \
+          -var='public_subnet_cidrs=["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]' \
+          -var='private_subnet_cidrs=["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]' \
+          -var='availability_zones=["us-east-1a", "us-east-1b", "us-east-1c"]' \
+          -var="env=dev" \
+          -var='security_group_name=["sg-00246283c32b08144"]' \
+          -var="instance_type=t2.micro" \
+          -var="ami_id=ami-055b20a0020459df7"
