@@ -29,9 +29,9 @@ variable "availability_zones" {
   default     = ["us-west-1a", "us-west-1b", "us-west-1c"]
 }
 
-variable "security_group_name" {
-  description = "The name of the security group"
-  type        = list(string)
+variable "security_group_id" {
+  description = "The id of the security group"
+  type        = string
 }
 
 variable "instance_type" {
@@ -44,4 +44,8 @@ variable "ami_id" {
   description = "The AMI ID for the EC2 instance"
   type        = string
 
+}
+variable "subnet_id" {
+  description = "The subnet IDs"
+  type        = string
 }
