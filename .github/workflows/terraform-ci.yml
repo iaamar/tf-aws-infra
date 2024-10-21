@@ -34,7 +34,7 @@ jobs:
       run: terraform validate .
 
     - name: Terraform plan
-      run: terraform plan
+      run: terraform plan -var "ami_id=${{ secrets.AMI_ID }}" -var "aws_region=${{ secrets.AWS_REGION }}" -var "instance_type=${{ secrets.INSTANCE_TYPE }}" -var "env=${{ secrets.ENV }}" -var "availability_zones=${{ secrets.AVAILABILITY_ZONES }}" -var "vpc_cidr_block=${{ secrets.VPC_CIDR_BLOCK }}" -var "public_subnet_cidrs=${{ secrets.PUBLIC_SUBNET_CIDRS }}" -var "private_subnet_cidrs=${{ secrets.PRIVATE_SUBNET_CIDRS }}"
     
     - name: Terraform apply
       run: terraform apply -var "ami_id=${{ secrets.AMI_ID }}" -var "aws_region=${{ secrets.AWS_REGION }}" -var "instance_type=${{ secrets.INSTANCE_TYPE }}" -var "env=${{ secrets.ENV }}" -var "availability_zones=${{ secrets.AVAILABILITY_ZONES }}" -var "vpc_cidr_block=${{ secrets.VPC_CIDR_BLOCK }}" -var "public_subnet_cidrs=${{ secrets.PUBLIC_SUBNET_CIDRS }}" -var "private_subnet_cidrs=${{ secrets.PRIVATE_SUBNET_CIDRS }}"
