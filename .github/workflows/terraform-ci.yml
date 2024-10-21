@@ -48,5 +48,4 @@ jobs:
         -var 'private_subnet_cidrs=["10.0.4.0/24","10.0.5.0/24","10.0.6.0/24"]'
     
     - name: Terraform apply
-      run: |
-        terraform apply webapp.tfplan -auto-approve
+      run: terraform apply webapp.tfplan
