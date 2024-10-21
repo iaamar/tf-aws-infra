@@ -44,4 +44,4 @@ jobs:
     
     - name: Terraform apply
       run: |
-        terraform apply webapp.tfplan
+        terraform apply webapp.tfplan -auto-approve
