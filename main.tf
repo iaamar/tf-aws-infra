@@ -107,8 +107,8 @@ resource "aws_security_group" "app_security_group" {
 
   ingress {
     description = "Allow application traffic"
-    from_port   = 9000
-    to_port     = 9000
+    from_port   = 9001
+    to_port     = 9001
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
