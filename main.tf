@@ -146,6 +146,91 @@ resource "aws_instance" "webapp_instance" {
     Name = "WebAppInstance"
   }
   associate_public_ip_address = true
+  depends_on                  = [aws_db_instance.csye6225_db]
+
+  user_data = base64encode(<<-EOF
+            #!/bin/bash
+            echo "DB_ENV_TYPE=aws" >> /opt/webapp/.env
+            echo "DB_HOST=${aws_db_instance.csye6225_db.address}" >> /opt/webapp/.env
+            echo "DB_USER=csye6225" >> /opt/webapp/.env
+            echo "DB_PASSWORD=${var.db_password}" >> /opt/webapp/.env
+            echo "DB_DATABASE=csye6225" >> /opt/webapp/.env
+            echo "DB_PORT=${var.db_port}" >> /opt/webapp/.env
+            echo "SSL=true" >> /opt/webapp/.env
+            sudo systemctl restart mywebapp.service
+            EOF
+  )
+
 }
 
+## for database instance
+# Database Security Group
+resource "aws_security_group" "database_sg" {
+  name        = "database-security-group"
+  description = "Security group for RDS instances"
+  vpc_id      = aws_vpc.main_vpc.id
 
+  ingress {
+    description     = "Allow inbound traffic from application security group"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_security_group.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Database Security Group"
+  }
+}
+
+# RDS Parameter Group
+resource "aws_db_parameter_group" "custom_pg" {
+  family = "postgres14" # Change this to match your database engine and version
+  name   = "csye6225-custom-pg"
+
+  parameter {
+    name = "max_connections"
+    value = "100"
+    apply_method = "pending-reboot"
+  }
+}
+
+# RDS Subnet Group
+resource "aws_db_subnet_group" "private_subnet_group" {
+  name       = "csye6225-private-subnet-group"
+  subnet_ids = aws_subnet.private_subnet[*].id
+
+  tags = {
+    Name = "CSYE6225 Private Subnet Group"
+  }
+}
+
+# RDS Instance
+resource "aws_db_instance" "csye6225_db" {
+  identifier             = "csye6225"
+  engine                 = "postgres"
+  engine_version         = "14"
+  instance_class         = "db.t3.micro"
+  allocated_storage      = 20
+  storage_type           = "gp2"
+  multi_az               = false
+  db_name                = "csye6225"
+  username               = "csye6225"
+  password               = var.db_password
+  parameter_group_name   = aws_db_parameter_group.custom_pg.name
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.database_sg.id]
+  db_subnet_group_name   = aws_db_subnet_group.private_subnet_group.name
+  publicly_accessible    = false
+
+  tags = {
+    Name = "CSYE6225 Database"
+  }
+}

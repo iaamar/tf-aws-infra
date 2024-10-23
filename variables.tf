@@ -40,3 +40,22 @@ variable "ami_id" {
   type        = string
 
 }
+
+variable "db_password" {
+  description = "The password for the database"
+  type        = string
+}
+
+
+variable "db_port" {
+  description = "The port for the database"
+  type        = number
+  default     = 5432
+}
+
+variable "app_port" {
+  description = "The port for the application"
+  type        = number
+  default     = 9001
+
+}
