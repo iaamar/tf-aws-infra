@@ -18,3 +18,13 @@ output "private_subnet_ids" {
 output "internet_gateway_id" {
   value = aws_internet_gateway.igw.id
 }
+
+output "s3_bucket_name" {
+  value       = aws_s3_bucket.private_webapp_bucket.bucket
+  description = "The name of the S3 bucket used for storing images"
+}
+
+output "rds_endpoint" {
+  value       = aws_db_instance.csye6225_db.address
+  description = "The endpoint of the RDS instance"
+}

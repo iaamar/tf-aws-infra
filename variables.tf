@@ -59,3 +59,28 @@ variable "app_port" {
   default     = 9001
 
 }
+
+variable "domain_name" {
+  description = "The domain name for the instance"
+  type        = string
+}
+
+variable "record_type" {
+  description = "The record type for the instance"
+  type        = string
+}
+
+variable "ttl" {
+  description = "The TTL for the instance"
+  type        = number
+}
+
+variable "aws_access_key" {
+  description = "The AWS access key"
+  type        = string
+}
+
+variable "aws_secret_key" {
+  description = "The AWS secret key"
+  type        = string
+}

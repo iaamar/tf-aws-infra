@@ -132,6 +132,7 @@ resource "aws_instance" "webapp_instance" {
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.app_security_group.id]
   subnet_id              = element(aws_subnet.public_subnet[*].id, 0)
+  iam_instance_profile   = aws_iam_instance_profile.ec2_role_profile.name
 
 
   root_block_device {
@@ -150,14 +151,30 @@ resource "aws_instance" "webapp_instance" {
 
   user_data = base64encode(<<-EOF
             #!/bin/bash
-            echo "DB_ENV_TYPE=aws" >> /opt/webapp/.env
             echo "DB_HOST=${aws_db_instance.csye6225_db.address}" >> /opt/webapp/.env
             echo "DB_USER=csye6225" >> /opt/webapp/.env
             echo "DB_PASSWORD=${var.db_password}" >> /opt/webapp/.env
             echo "DB_DATABASE=csye6225" >> /opt/webapp/.env
             echo "DB_PORT=${var.db_port}" >> /opt/webapp/.env
-            echo "SSL=true" >> /opt/webapp/.env
-            sudo systemctl restart mywebapp.service
+            echo "S3_BUCKET_NAME=${aws_s3_bucket.private_webapp_bucket.bucket}" >> /opt/webapp/.env
+            echo "AWS_REGION=${var.aws_region}" >> /opt/webapp/.env
+            echo "AWS_ACCESS_KEY_ID=${var.aws_access_key}" >> /opt/webapp/.env
+            echo "AWS_SECRET_ACCESS_KEY=${var.aws_secret_key}" >> /opt/webapp/.env
+            echo "AWS_OUTPUT_FORMAT=json" >> /opt/webapp/.env
+            sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config \
+            -m ec2 \
+            -c file:/opt/webapp/cloud-watch-config.json \
+            -s
+            sudo chmod 644 /opt/webapp/cloud-watch-config.json
+            sudo chown root:root /opt/webapp/cloud-watch-config.json
+            sudo systemctl enable amazon-cloudwatch-agent
+            sudo systemctl start amazon-cloudwatch-agent
+            sudo systemctl status amazon-cloudwatch-agent
+            sudo systemctl enable mywebapp.service
+            sudo systemctl start mywebapp.service
+            sudo systemctl status mywebapp.service
+            sudo systemctl daemon-reload
             EOF
   )
 
@@ -196,8 +213,8 @@ resource "aws_db_parameter_group" "custom_pg" {
   name   = "csye6225-custom-pg"
 
   parameter {
-    name = "max_connections"
-    value = "100"
+    name         = "max_connections"
+    value        = "100"
     apply_method = "pending-reboot"
   }
 }
@@ -233,4 +250,154 @@ resource "aws_db_instance" "csye6225_db" {
   tags = {
     Name = "CSYE6225 Database"
   }
+}
+
+# S3 bucket
+# Generate a random UUID for the bucket name
+resource "random_id" "bucket_name" {
+  byte_length = 7
+}
+
+resource "aws_s3_bucket" "private_webapp_bucket" {
+  bucket = random_id.bucket_name.hex
+
+  # Force deletion of non-empty bucket
+  force_destroy = true
+
+  tags = {
+    Name        = "S3 Bucket"
+    Environment = "S3 Bucket"
+  }
+}
+
+# Lifecycle policy for transitioning to STANDARD_IA after 30 days
+resource "aws_s3_bucket_lifecycle_configuration" "s3_lifecycle_config" {
+  bucket = aws_s3_bucket.private_webapp_bucket.id
+
+  rule {
+    id = "lifecycle"
+    filter {}
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+    status = "Enabled"
+  }
+
+}
+
+# Enable default encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_key_encryption" {
+  bucket = aws_s3_bucket.private_webapp_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# IAM Role for for ec2 to access S3 bucket
+resource "aws_iam_role" "s3_access_role_to_ec2" {
+  name = "CSYE6225-S3BucketAccessRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Sid    = "RoleForEC2",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# IAM Policy for S3 Bucket Access and cloudwatch access
+resource "aws_iam_policy" "s3_access_policy" {
+  name        = "WebappS3AccessPolicy"
+  description = "Policy for accessing the private S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ],
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.private_webapp_bucket.arn}/*",
+          "arn:aws:s3:::${aws_s3_bucket.private_webapp_bucket.bucket}"
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "cloudwatch:PutMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:PutLogEvents",
+          "logs:*"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Get the policy by name
+data "aws_iam_policy" "cloudwatch_policy" {
+  name = "CloudWatchAgentServerPolicy"
+}
+
+//attaching the policy to ec2 role
+resource "aws_iam_policy_attachment" "policy_role_attach" {
+  name       = "policy_role_attach"
+  roles      = [aws_iam_role.s3_access_role_to_ec2.name]
+  policy_arn = aws_iam_policy.s3_access_policy.arn
+}
+
+
+//attaching the policy to cloudwatch
+resource "aws_iam_policy_attachment" "policy_role_attach_cloudwatch" {
+  name       = "policy_role_attach_cloudwatch"
+  roles      = [aws_iam_role.s3_access_role_to_ec2.name]
+  policy_arn = data.aws_iam_policy.cloudwatch_policy.arn
+}
+
+//attaching the policy to ec2 role
+resource "aws_iam_instance_profile" "ec2_role_profile" {
+  name = "ec2_role_profile"
+  role = aws_iam_role.s3_access_role_to_ec2.name
+}
+
+//public access block
+resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access_block" {
+  bucket = aws_s3_bucket.private_webapp_bucket.bucket
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+//AWS Route 53 zone data source
+data "aws_route53_zone" "selected_zone" {
+  name         = var.domain_name
+  private_zone = false
+}
+
+//AWS Route 53 A record
+resource "aws_route53_record" "server_mapping_record" {
+  zone_id = data.aws_route53_zone.selected_zone.zone_id
+  name    = var.domain_name
+  type    = var.record_type
+  records = [aws_instance.webapp_instance.public_ip]
+  ttl     = var.ttl
 }
