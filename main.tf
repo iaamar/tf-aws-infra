@@ -263,8 +263,7 @@ resource "aws_s3_bucket" "private_webapp_bucket" {
   force_destroy = true
 
   tags = {
-    Name        = "${var.assignment} - S3 Bucket"
-    Environment = "${var.env}"
+    Name = "${var.assignment} - S3 Bucket"
   }
 }
 
@@ -387,14 +386,14 @@ resource "aws_s3_bucket_public_access_block" "s3_bucket_public_access_block" {
 
 //AWS Route 53 zone data source
 data "aws_route53_zone" "selected_zone" {
-  name         = var.domain_name
+  name         = "${var.env}${var.domain_name}"
   private_zone = false
 }
 
 //AWS Route 53 A record
 resource "aws_route53_record" "server_mapping_record" {
   zone_id = data.aws_route53_zone.selected_zone.zone_id
-  name    = var.domain_name
+  name    = "${var.env}${var.domain_name}"
   type    = var.record_type
   # records = [aws_instance.webapp_instance.public_ip]
   # ttl = var.ttl
