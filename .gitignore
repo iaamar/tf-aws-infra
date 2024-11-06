@@ -11,3 +11,4 @@ crash.log
 
 # Ignore sensitive variables file
 terraform.tfvars
+.terraform.tfstate.lock.info
