@@ -41,6 +41,16 @@ variable "ami_id" {
 
 }
 
+variable "db_user" {
+  description = "The username for the database"
+  type        = string
+}
+
+variable "db_database" {
+  description = "The database name"
+  type        = string
+}
+
 variable "db_password" {
   description = "The password for the database"
   type        = string
@@ -70,11 +80,6 @@ variable "record_type" {
   type        = string
 }
 
-variable "ttl" {
-  description = "The TTL for the instance"
-  type        = number
-}
-
 variable "aws_access_key" {
   description = "The AWS access key"
   type        = string
@@ -82,5 +87,15 @@ variable "aws_access_key" {
 
 variable "aws_secret_key" {
   description = "The AWS secret key"
+  type        = string
+}
+
+variable "key_name" {
+  description = "The key name for the EC2 instance"
+  type        = string
+}
+
+variable "assignment" {
+  description = "The assignment name"
   type        = string
 }
