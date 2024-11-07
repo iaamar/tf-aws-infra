@@ -471,19 +471,19 @@ resource "aws_iam_role" "autoscaling_role" {
 # Target Group for Auto-Scaling
 resource "aws_lb_target_group" "app_target_group" {
   name     = "app-target-group"
-  port     = 9001
-  protocol = "HTTP"
+  port     = var.app_port
+  protocol = var.protocol
   vpc_id   = aws_vpc.main_vpc.id
 
   health_check {
     enabled             = true
     path                = "/healthz"
-    port                = 9001
-    protocol            = "HTTP"
+    port                = var.app_port
+    protocol            = var.protocol
     interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    timeout             = 8
+    healthy_threshold   = 10
+    unhealthy_threshold = 10
   }
 
   tags = {
@@ -495,7 +495,7 @@ resource "aws_lb_target_group" "app_target_group" {
 resource "aws_lb_listener" "app_lb_listener" {
   load_balancer_arn = aws_lb.app_load_balancer.arn
   port              = 80
-  protocol          = "HTTP"
+  protocol          = var.protocol
 
   default_action {
     type             = "forward"
@@ -536,7 +536,7 @@ resource "aws_launch_template" "app_launch_template" {
 resource "aws_autoscaling_group" "app_asg" {
   desired_capacity    = 3
   max_size            = 5
-  min_size            = 1
+  min_size            = 3
   vpc_zone_identifier = [for subnet in aws_subnet.public_subnet : subnet.id]
   launch_template {
     id      = aws_launch_template.app_launch_template.id
@@ -557,32 +557,32 @@ resource "aws_autoscaling_group" "app_asg" {
 resource "aws_autoscaling_policy" "scale_up" {
   name                    = "scale-up"
   scaling_adjustment      = 1
-  adjustment_type         = "ChangeInCapacity"
-  cooldown                = 60
+  adjustment_type         = var.adjustment_type
+  cooldown                = var.cooldown
   autoscaling_group_name  = aws_autoscaling_group.app_asg.name
-  metric_aggregation_type = "Average"
+  metric_aggregation_type = var.metric_aggregation_type
 }
 
 # Scale Down Policy
 resource "aws_autoscaling_policy" "scale_down" {
   name                    = "scale-down"
   scaling_adjustment      = -1
-  adjustment_type         = "ChangeInCapacity"
-  cooldown                = 60
+  adjustment_type         = var.adjustment_type
+  cooldown                = var.cooldown
   autoscaling_group_name  = aws_autoscaling_group.app_asg.name
-  metric_aggregation_type = "Average"
+  metric_aggregation_type = var.metric_aggregation_type
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_cpu_alarm" {
-  alarm_name          = "HighCPUUtilizationAlarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "12"
-  alarm_description   = "This metric monitors ec2 instance CPU utilization"
+  alarm_name          = var.high_cpu_alarm_name
+  comparison_operator = var.high_cpu_comparison_operator
+  evaluation_periods  = var.evaluation_periods
+  metric_name         = var.metric_name
+  namespace           = var.namespace
+  period              = var.period
+  statistic           = var.statistic
+  threshold           = var.high_cpu_threshold
+  alarm_description   = var.alarm_description
   alarm_actions       = [aws_autoscaling_policy.scale_up.arn]
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.app_asg.name
@@ -590,15 +590,15 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu_alarm" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "low_cpu_alarm" {
-  alarm_name          = "LowCPUUtilizationAlarm"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "8"
-  alarm_description   = "This metric monitors ec2 instance CPU utilization"
+  alarm_name          = var.low_cpu_alarm_name
+  comparison_operator = var.low_cpu_comparison_operator
+  evaluation_periods  = var.evaluation_periods
+  metric_name         = var.metric_name
+  namespace           = var.namespace
+  period              = var.period
+  statistic           = var.statistic
+  threshold           = var.low_cpu_threshold
+  alarm_description   = var.alarm_description
   alarm_actions       = [aws_autoscaling_policy.scale_down.arn]
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.app_asg.name

@@ -99,3 +99,84 @@ variable "assignment" {
   description = "The assignment name"
   type        = string
 }
+
+variable "low_cpu_alarm_name" {
+  description = "The name of the low CPU alarm"
+  type        = string
+}
+
+variable "low_cpu_comparison_operator" {
+  description = "The comparison operator for the low CPU alarm"
+  type        = string
+}
+
+variable "evaluation_periods" {
+  description = "The number of evaluation periods for the alarm"
+  type        = string
+}
+
+variable "metric_name" {
+  description = "The name of the metric to monitor"
+  type        = string
+}
+
+variable "namespace" {
+  description = "The namespace for the metric"
+  type        = string
+}
+
+variable "period" {
+  description = "The period for the alarm"
+  type        = string
+}
+
+variable "statistic" {
+  description = "The statistic to use for the alarm"
+  type        = string
+}
+
+
+variable "low_cpu_threshold" {
+  description = "The threshold for the low CPU alarm"
+  type        = string
+}
+
+variable "high_cpu_threshold" {
+  description = "The threshold for the high CPU alarm"
+  type        = string
+}
+
+variable "alarm_description" {
+  description = "The description for the alarm"
+  type        = string
+}
+
+variable "high_cpu_alarm_name" {
+  description = "The name of the high CPU alarm"
+  type        = string
+}
+
+variable "high_cpu_comparison_operator" {
+  description = "The comparison operator for the high CPU alarm"
+  type        = string
+}
+
+variable "protocol" {
+  description = "The protocol for the health check"
+  type        = string
+}
+
+variable "cooldown" {
+  description = "The cooldown period for the alarm"
+  type        = number
+}
+
+variable "adjustment_type" {
+  description = "The adjustment type for the alarm"
+  type        = string
+}
+
+variable "metric_aggregation_type" {
+  description = "The aggregation type for the alarm"
+  type        = string
+}
