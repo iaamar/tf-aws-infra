@@ -89,26 +89,10 @@ resource "aws_security_group" "app_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # ingress {
-  #   description = "Allow HTTP"
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = [aws_security_group.load_balancer_sg.id]
-  # }
-
-  # ingress {
-  #   description = "Allow HTTPS"
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = [aws_security_group.load_balancer_sg.id]
-  # }
-
   ingress {
     description     = "Allow application traffic"
-    from_port       = 9001
-    to_port         = 9001
+    from_port       = var.app_port
+    to_port         = var.app_port
     protocol        = "tcp"
     security_groups = [aws_security_group.load_balancer_sg.id]
   }
@@ -126,59 +110,6 @@ resource "aws_security_group" "app_security_group" {
   }
 }
 
-
-# resource "aws_instance" "webapp_instance" {
-#   ami                    = var.ami_id
-#   instance_type          = var.instance_type
-#   vpc_security_group_ids = [aws_security_group.app_security_group.id]
-#   subnet_id              = element(aws_subnet.public_subnet[*].id, 0)
-#   iam_instance_profile   = aws_iam_instance_profile.ec2_role_profile.name
-
-
-#   root_block_device {
-#     volume_size           = 25
-#     volume_type           = "gp2"
-#     delete_on_termination = true
-#   }
-
-#   disable_api_termination = false
-
-#   tags = {
-#     Name = "WebAppInstance"
-#   }
-#   associate_public_ip_address = true
-#   depends_on                  = [aws_db_instance.csye6225_db]
-
-#   user_data = base64encode(<<-EOF
-#             #!/bin/bash
-#             echo "DB_HOST=${aws_db_instance.csye6225_db.address}" >> /opt/webapp/.env
-#             echo "DB_USER=csye6225" >> /opt/webapp/.env
-#             echo "DB_PASSWORD=${var.db_password}" >> /opt/webapp/.env
-#             echo "DB_DATABASE=csye6225" >> /opt/webapp/.env
-#             echo "DB_PORT=${var.db_port}" >> /opt/webapp/.env
-#             echo "S3_BUCKET_NAME=${aws_s3_bucket.private_webapp_bucket.bucket}" >> /opt/webapp/.env
-#             echo "AWS_REGION=${var.aws_region}" >> /opt/webapp/.env
-#             echo "AWS_ACCESS_KEY_ID=${var.aws_access_key}" >> /opt/webapp/.env
-#             echo "AWS_SECRET_ACCESS_KEY=${var.aws_secret_key}" >> /opt/webapp/.env
-#             echo "AWS_OUTPUT_FORMAT=json" >> /opt/webapp/.env
-#             sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-#             -a fetch-config \
-#             -m ec2 \
-#             -c file:/opt/webapp/cloud-watch-config.json \
-#             -s
-#             sudo chmod 644 /opt/webapp/cloud-watch-config.json
-#             sudo chown root:root /opt/webapp/cloud-watch-config.json
-#             sudo systemctl enable amazon-cloudwatch-agent
-#             sudo systemctl start amazon-cloudwatch-agent
-#             sudo systemctl status amazon-cloudwatch-agent
-#             sudo systemctl enable mywebapp.service
-#             sudo systemctl start mywebapp.service
-#             sudo systemctl status mywebapp.service
-#             sudo systemctl daemon-reload
-#             EOF
-#   )
-# }
-
 # Database Security Group
 resource "aws_security_group" "database_sg" {
   name        = "database-security-group"
@@ -187,8 +118,8 @@ resource "aws_security_group" "database_sg" {
 
   ingress {
     description     = "Allow inbound traffic from application security group"
-    from_port       = 5432
-    to_port         = 5432
+    from_port       = var.db_port
+    to_port         = var.db_port
     protocol        = "tcp"
     security_groups = [aws_security_group.app_security_group.id]
   }
@@ -439,7 +370,7 @@ resource "aws_security_group" "load_balancer_sg" {
 
 # Load Balancer
 resource "aws_lb" "app_load_balancer" {
-  name               = "app-load-balancer"
+  name               = "csye6225-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.load_balancer_sg.id]
@@ -470,7 +401,7 @@ resource "aws_iam_role" "autoscaling_role" {
 
 # Target Group for Auto-Scaling
 resource "aws_lb_target_group" "app_target_group" {
-  name     = "app-target-group"
+  name     = "csye6225-tg"
   port     = var.app_port
   protocol = var.protocol
   vpc_id   = aws_vpc.main_vpc.id
@@ -505,7 +436,7 @@ resource "aws_lb_listener" "app_lb_listener" {
 
 # Launch Template for Auto-Scaling Group
 resource "aws_launch_template" "app_launch_template" {
-  name          = "app-launch-template"
+  name          = "csye6225-lt"
   image_id      = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
@@ -534,6 +465,7 @@ resource "aws_launch_template" "app_launch_template" {
 
 # Auto-Scaling Group
 resource "aws_autoscaling_group" "app_asg" {
+  name                = "csye6225-asg"
   desired_capacity    = 3
   max_size            = 5
   min_size            = 3
@@ -548,7 +480,7 @@ resource "aws_autoscaling_group" "app_asg" {
 
   tag {
     key                 = "Name"
-    value               = "${var.assignment}-AppInstance"
+    value               = "${var.assignment} - AppInstance"
     propagate_at_launch = true
   }
 }
