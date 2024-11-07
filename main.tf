@@ -89,26 +89,10 @@ resource "aws_security_group" "app_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # ingress {
-  #   description = "Allow HTTP"
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = [aws_security_group.load_balancer_sg.id]
-  # }
-
-  # ingress {
-  #   description = "Allow HTTPS"
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = [aws_security_group.load_balancer_sg.id]
-  # }
-
   ingress {
     description     = "Allow application traffic"
-    from_port       = 9001
-    to_port         = 9001
+    from_port       = var.app_port
+    to_port         = var.app_port
     protocol        = "tcp"
     security_groups = [aws_security_group.load_balancer_sg.id]
   }
@@ -134,8 +118,8 @@ resource "aws_security_group" "database_sg" {
 
   ingress {
     description     = "Allow inbound traffic from application security group"
-    from_port       = 5432
-    to_port         = 5432
+    from_port       = var.db_port
+    to_port         = var.db_port
     protocol        = "tcp"
     security_groups = [aws_security_group.app_security_group.id]
   }
@@ -496,7 +480,7 @@ resource "aws_autoscaling_group" "app_asg" {
 
   tag {
     key                 = "Name"
-    value               = "${var.assignment}-AppInstance"
+    value               = "${var.assignment} - AppInstance"
     propagate_at_launch = true
   }
 }
