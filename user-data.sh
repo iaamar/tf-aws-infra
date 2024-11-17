@@ -10,6 +10,7 @@ echo "AWS_REGION=${AWS_REGION}" >> /opt/webapp/.env
 echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}" >> /opt/webapp/.env
 echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_KEY}" >> /opt/webapp/.env
 echo "AWS_OUTPUT_FORMAT=json" >> /opt/webapp/.env
+echo "SNS_TOPIC_ARN=${SNS_TOPIC_ARN}" >> /opt/webapp/.env
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/webapp/cloud-watch-config.json -s
 sudo chmod 644 /opt/webapp/cloud-watch-config.json
 sudo chown root:root /opt/webapp/cloud-watch-config.json

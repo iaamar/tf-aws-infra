@@ -180,3 +180,118 @@ variable "metric_aggregation_type" {
   description = "The aggregation type for the alarm"
   type        = string
 }
+
+variable "sendgrid_api_key" {
+  description = "The SendGrid API key"
+  type        = string
+}
+
+variable "launch_template_name" {
+  description = "Name of the launch template"
+  type        = string
+}
+
+variable "target_group_name" {
+  description = "Name of the target group"
+  type        = string
+}
+
+variable "lb_name" {
+  description = "Name of the load balancer"
+  type        = string
+}
+
+variable "lb_sg_name" {
+  description = "Name of the load balancer security group"
+  type        = string
+}
+
+variable "app_security_group_name" {
+  description = "Name of the application security group"
+  type        = string
+}
+
+variable "db_security_group_name" {
+  description = "Name of the database security group"
+  type        = string
+}
+
+variable "db_subnet_group_name" {
+  description = "Name of the database subnet group"
+  type        = string
+}
+
+variable "db_engine" {
+  description = "Database engine type"
+  type        = string
+}
+
+variable "db_engine_version" {
+  description = "Database engine version"
+  type        = string
+}
+
+variable "db_instance_class" {
+  description = "Database instance class"
+  type        = string
+}
+
+variable "db_storage_type" {
+  description = "Database storage type"
+  type        = string
+}
+
+variable "db_storage_size" {
+  description = "Size of the database storage in GB"
+  type        = number
+}
+
+variable "handler" {
+  description = "Lambda handler function"
+  type        = string
+}
+
+variable "lambda_runtime" {
+  description = "Runtime for the Lambda function"
+  type        = string
+}
+
+variable "deployment_package" {
+  description = "Deployment package for the Lambda function"
+  type        = string
+}
+
+variable "lambda_function_name" {
+  description = "Name of the Lambda function"
+  type        = string
+}
+
+variable "sns_topic_name" {
+  description = "Name of the SNS topic"
+  type        = string
+}
+
+variable "timeout" {
+  description = "Timeout for the Lambda function in seconds"
+  type        = number
+}
+
+variable "desired_capacity" {
+  description = "Desired capacity for the autoscaling group"
+  type        = number
+}
+
+variable "min_size" {
+  description = "value of minimum size for autoscaling group"
+  type        = number
+}
+
+variable "max_size" {
+  description = "value of maximum size for autoscaling group"
+  type        = number
+}
+
+variable "health_check_grace_period" {
+  description = "The grace period for the health check"
+  type        = number
+}

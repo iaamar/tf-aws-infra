@@ -77,7 +77,7 @@ resource "aws_route_table_association" "private_route_table_assoc" {
 }
 
 resource "aws_security_group" "app_security_group" {
-  name        = "application-security-group"
+  name        = var.app_security_group_name
   description = "Security group for EC2 instances hosting webapp"
   vpc_id      = aws_vpc.main_vpc.id
 
@@ -112,7 +112,7 @@ resource "aws_security_group" "app_security_group" {
 
 # Database Security Group
 resource "aws_security_group" "database_sg" {
-  name        = "database-security-group"
+  name        = var.db_security_group_name
   description = "Security group for RDS instances"
   vpc_id      = aws_vpc.main_vpc.id
 
@@ -150,7 +150,7 @@ resource "aws_db_parameter_group" "custom_pg" {
 
 # RDS Subnet Group
 resource "aws_db_subnet_group" "private_subnet_group" {
-  name       = "csye6225-private-subnet-group"
+  name       = var.db_subnet_group_name
   subnet_ids = aws_subnet.private_subnet[*].id
 
   tags = {
@@ -160,15 +160,15 @@ resource "aws_db_subnet_group" "private_subnet_group" {
 
 # RDS Instance
 resource "aws_db_instance" "csye6225_db" {
-  identifier             = "csye6225"
-  engine                 = "postgres"
-  engine_version         = "14"
-  instance_class         = "db.t3.micro"
-  allocated_storage      = 20
-  storage_type           = "gp2"
+  identifier             = var.db_database
+  engine                 = var.db_engine
+  engine_version         = var.db_engine_version
+  instance_class         = var.db_instance_class
+  allocated_storage      = var.db_storage_size
+  storage_type           = var.db_storage_type
   multi_az               = false
-  db_name                = "csye6225"
-  username               = "csye6225"
+  db_name                = var.db_database
+  username               = var.db_user
   password               = var.db_password
   parameter_group_name   = aws_db_parameter_group.custom_pg.name
   skip_final_snapshot    = true
@@ -340,7 +340,7 @@ resource "aws_route53_record" "server_mapping_record" {
 
 # Load Balancer Security Group
 resource "aws_security_group" "load_balancer_sg" {
-  name        = "load-balancer-sg"
+  name        = var.lb_sg_name
   description = "Security group for Load Balancer"
   vpc_id      = aws_vpc.main_vpc.id
 
@@ -370,7 +370,7 @@ resource "aws_security_group" "load_balancer_sg" {
 
 # Load Balancer
 resource "aws_lb" "app_load_balancer" {
-  name               = "csye6225-lb"
+  name               = var.lb_name
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.load_balancer_sg.id]
@@ -401,7 +401,7 @@ resource "aws_iam_role" "autoscaling_role" {
 
 # Target Group for Auto-Scaling
 resource "aws_lb_target_group" "app_target_group" {
-  name     = "csye6225-tg"
+  name     = var.target_group_name
   port     = var.app_port
   protocol = var.protocol
   vpc_id   = aws_vpc.main_vpc.id
@@ -411,10 +411,10 @@ resource "aws_lb_target_group" "app_target_group" {
     path                = "/healthz"
     port                = var.app_port
     protocol            = var.protocol
-    interval            = 30
+    interval            = 120
     timeout             = 8
-    healthy_threshold   = 10
-    unhealthy_threshold = 10
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
   }
 
   tags = {
@@ -436,7 +436,7 @@ resource "aws_lb_listener" "app_lb_listener" {
 
 # Launch Template for Auto-Scaling Group
 resource "aws_launch_template" "app_launch_template" {
-  name          = "csye6225-lt"
+  name          = var.launch_template_name
   image_id      = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
@@ -460,15 +460,16 @@ resource "aws_launch_template" "app_launch_template" {
     AWS_REGION     = var.aws_region
     AWS_ACCESS_KEY = var.aws_access_key
     AWS_SECRET_KEY = var.aws_secret_key
+    SNS_TOPIC_ARN  = aws_sns_topic.user_verification.arn
   }))
 }
 
 # Auto-Scaling Group
 resource "aws_autoscaling_group" "app_asg" {
   name                = "csye6225-asg"
-  desired_capacity    = 3
-  max_size            = 5
-  min_size            = 3
+  desired_capacity    = var.desired_capacity
+  max_size            = var.max_size
+  min_size            = var.min_size
   vpc_zone_identifier = [for subnet in aws_subnet.public_subnet : subnet.id]
   launch_template {
     id      = aws_launch_template.app_launch_template.id
@@ -476,11 +477,11 @@ resource "aws_autoscaling_group" "app_asg" {
   }
   target_group_arns         = [aws_lb_target_group.app_target_group.arn]
   health_check_type         = "EC2"
-  health_check_grace_period = 300
+  health_check_grace_period = var.health_check_grace_period
 
   tag {
-    key                 = "Name"
-    value               = "${var.assignment} - AppInstance"
+    key                 = "CSYE6225 - AutoScalingGroup"
+    value               = "${var.assignment} - AutoScalingGroup"
     propagate_at_launch = true
   }
 }
@@ -535,4 +536,121 @@ resource "aws_cloudwatch_metric_alarm" "low_cpu_alarm" {
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.app_asg.name
   }
+}
+
+# Define a policy for SNS publish permission to the specific topic
+resource "aws_iam_policy" "sns_publish_policy" {
+  name        = "SNSPublishPolicy"
+  description = "Policy to allow publishing to the SNS topic for user verification."
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.user_verification.arn
+      }
+    ]
+  })
+}
+
+# Attach the SNS publish policy to the existing EC2 IAM role
+resource "aws_iam_policy_attachment" "sns_publish_policy_attachment" {
+  name       = "sns_publish_policy_attachment"
+  roles      = [aws_iam_role.s3_access_role_to_ec2.name]
+  policy_arn = aws_iam_policy.sns_publish_policy.arn
+}
+
+
+# IAM Role for Lambda Execution
+resource "aws_iam_role" "lambda_exec_role" {
+  name = "UserVerificationLambdaExecRole"
+
+  # Allow Lambda to assume this role
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy to grant permissions to Lambda
+resource "aws_iam_policy" "lambda_exec_policy" {
+  name        = "UserVerificationLambdaExecPolicy"
+  description = "Policy to allow Lambda function to access SNS, RDS, and CloudWatch."
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "sns:Publish",
+          "cloudwatch:PutMetricData",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["ses:SendEmail", "ses:SendRawEmail"],
+        Resource = "*"
+      }
+
+    ]
+  })
+}
+
+# Attach the policy to the Lambda execution role
+resource "aws_iam_role_policy_attachment" "lambda_exec_policy_attachment" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = aws_iam_policy.lambda_exec_policy.arn
+}
+
+resource "aws_sns_topic" "user_verification" {
+  name = var.sns_topic_name
+}
+resource "aws_lambda_function" "user_verification" {
+  function_name = var.lambda_function_name
+  filename      = var.deployment_package
+  handler       = var.handler
+  runtime       = var.lambda_runtime
+  role          = aws_iam_role.lambda_exec_role.arn
+  timeout       = var.timeout
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN    = aws_sns_topic.user_verification.arn
+      SENDGRID_API_KEY = var.sendgrid_api_key
+      BASE_URL         = "${var.env}${var.domain_name}"
+    }
+  }
+
+  source_code_hash = filebase64sha256(var.deployment_package)
+}
+
+# Allow SNS to invoke the Lambda function
+resource "aws_lambda_permission" "allow_sns_invoke_lambda" {
+  statement_id  = "AllowSNSInvokeLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.user_verification.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.user_verification.arn
+}
+
+# Subscribe Lambda function to SNS topic
+resource "aws_sns_topic_subscription" "lambda_sns_subscription" {
+  topic_arn = aws_sns_topic.user_verification.arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.user_verification.arn
 }
