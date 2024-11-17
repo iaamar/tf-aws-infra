@@ -12,3 +12,5 @@ crash.log
 # Ignore sensitive variables file
 terraform.tfvars
 .terraform.tfstate.lock.info
+deployment_package.zip
+.DS_Store
