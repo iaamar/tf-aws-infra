@@ -630,9 +630,8 @@ resource "aws_lambda_function" "user_verification" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN    = aws_sns_topic.user_verification.arn
       SENDGRID_API_KEY = var.sendgrid_api_key
-      BASE_URL         = "${var.env}${var.domain_name}"
+      DOMAIN           = "${var.env}${var.domain_name}"
     }
   }
 
